@@ -1,0 +1,141 @@
+<html>
+<head>
+	<title>Game</title>
+	<script>
+		var canvas;	//tło
+		var canvasContext; //grafika
+		
+		//położenie i jego zmiany dla piłki
+		var ballX = 50; //piłka w osi X
+		var ballY = 50;
+		var ballSpeedX = 10; //o ile pikseli ma przeskakiwać
+		var ballSpeedY = 10;
+
+		//położenie i jego zmiany dla prostokątów
+		var paddle1Y = 250;
+		var paddle2Y = 300; // będzie automatycznie
+		const paddleHeight = 100;
+		const paddleThickness = 10;
+
+		//wyniki
+		var player1Score = 0;
+		var player2Score = 0;
+
+		function drawCircle(centerX, centerY, radius, circleColor){
+			//rysowanie piłki
+			canvasContext.fillStyle = circleColor;
+			canvasContext.beginPath();
+			canvasContext.arc(centerX, centerY, radius, 0, Math.PI*2, false); //false - drawing clockwise or not
+			canvasContext.fill();
+		}
+
+		function drawRect(leftX, topY, width, height, rectColor) {
+			canvasContext.fillStyle = rectColor; //tło
+			canvasContext.fillRect(leftX, topY, width, height); //0,0 
+		}
+
+		//funkcja wpływu ruchu myszką na położenie prostokątów
+		function calculateMousePos(evt) {	//evt - event data
+			var rect = canvas.getBoundingClientRect();
+			var root = document.documentElement;
+			var mouseX = evt.clientX - rect.left - root.scrollLeft;
+			var mouseY = evt.clientY - rect.top - root.scrollTop;
+			return {
+				x:mouseX,
+				y:mouseY
+			};
+		}
+
+		//funkcja resetująca ustawienie piłki
+		function ballReset() {
+			ballSpeedX = -ballSpeedX;
+			ballX = canvas.width/2;
+			ballY = canvas.height/2;
+		}
+
+		//ruchy prawego prostokąta - komputer
+		function computerMovement() {
+			var paddle2YCenter = paddle2Y + (paddleHeight/2);
+			if(paddle2YCenter < ballY-30) {		//35px zapasu od środka w każdą stronę
+				paddle2Y += 8; // = paddle2Y + 8
+			} else if(paddle2YCenter > ballY+30) {
+				paddle2Y -= 8;
+			}
+		}
+
+		function moveEverything() {
+			//ruch prawego prostokąta
+			computerMovement();
+
+			//ruch piłki
+			ballX = ballX + ballSpeedX;
+			
+			//przekroczenie lewej granicy
+			if(ballX < 0){
+				if(ballY > paddle1Y && ballY < paddle1Y+paddleHeight){
+					ballSpeedX = -ballSpeedX;
+				} else {
+					ballReset();
+					player2Score++;
+				}
+			}
+
+			//przekroczenie prawej granicy
+			if(ballX > canvas.width){
+				if(ballY > paddle1Y && ballY < paddle1Y+paddleHeight){
+					ballSpeedX = -ballSpeedX;
+				} else {
+					ballReset();
+					player1Score++;
+				}
+			}
+			ballY = ballY + ballSpeedY;
+			if(ballY > canvas.height || ballY < 0){
+				ballSpeedY = -ballSpeedY;
+			}
+		}		
+
+		function drawEverything() {
+			//rysowanie tła
+			drawRect(0, 0, canvas.width, canvas.height, "black"); //0,0 współrzędne lewego górnego wierzchołka
+
+			//rysowanie linii na środku
+			drawRect(canvas.width/2-2.5, 0, 5, canvas.height, "white");
+			
+			//przywołanie funkcji rysującej piłkę
+			drawCircle(ballX, ballY, 10, "red");			
+
+			drawRect(0, paddle1Y, paddleThickness, paddleHeight, "purple"); //lewy prostokąt
+			drawRect(canvas.width-paddleThickness, paddle2Y, paddleThickness, paddleHeight, "purple"); //prawy prostokąt
+
+			//tablica wyników
+			canvasContext.fillText(player1Score, 100, 100);
+			canvasContext.fillText(player2Score, canvas.width-100, 100);
+		}
+
+		//główna funkcja, zbiorcza
+		window.onload = function() {
+
+			canvas = document.getElementById("gameCanvas");
+			canvasContext = canvas.getContext("2d");
+			
+			var framesPerSecond = 30; 
+			setInterval(function(){
+				moveEverything(); 
+				drawEverything();
+			}, 1000/framesPerSecond);
+			
+			canvas.addEventListener("mousemove",
+				function(evt){
+					var mousePos = calculateMousePos(evt);
+					paddle1Y = mousePos.y - (paddleHeight/2);
+				})
+		}
+
+	</script>
+</head>
+<body>
+	<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+</body>
+</html>
