@@ -20,6 +20,8 @@
 		//wyniki
 		var player1Score = 0;
 		var player2Score = 0;
+		const winningScore = 3; //stała wygrana
+		var showingWinScreen = false;
 
 		function drawCircle(centerX, centerY, radius, circleColor){
 			//rysowanie piłki
@@ -46,17 +48,38 @@
 			};
 		}
 
+		//funkcja kliknięcia myszki po zakończonej grze
+		function handleMouseClick(evt) {
+			if(showingWinScreen) {
+				player1Score = 0;
+				player2Score = 0;
+				showingWinScreen = false;
+			}
+		}
+
 		//funkcja resetująca ustawienie piłki
 		function ballReset() {
+			//reset punktów po wygranej
+			if(player1Score >= winningScore || player2Score >= winningScore) {
+				showingWinScreen = true;
+			}
+
 			ballSpeedX = -ballSpeedX;
 			ballX = canvas.width/2;
 			ballY = canvas.height/2;
 		}
 
+		//rysowanie linii na środku
+		function drawNet() {
+			for(var i = 0; i < canvas.height; i += 50){
+				drawRect(canvas.width/2-1, i, 2, 35, "white");
+			}
+		}
+
 		//ruchy prawego prostokąta - komputer
 		function computerMovement() {
 			var paddle2YCenter = paddle2Y + (paddleHeight/2);
-			if(paddle2YCenter < ballY-30) {		//35px zapasu od środka w każdą stronę
+			if(paddle2YCenter < ballY-30) {		//30px zapasu od środka w każdą stronę
 				paddle2Y += 8; // = paddle2Y + 8
 			} else if(paddle2YCenter > ballY+30) {
 				paddle2Y -= 8;
@@ -64,6 +87,11 @@
 		}
 
 		function moveEverything() {
+			//zatrzymanie gry gdy ktoś wygra
+			if(showingWinScreen) {
+				return;
+			}
+
 			//ruch prawego prostokąta
 			computerMovement();
 
@@ -71,26 +99,37 @@
 			ballX = ballX + ballSpeedX;
 			
 			//przekroczenie lewej granicy
-			if(ballX < 0){
+			if(ballX <= paddleThickness*3){
 				if(ballY > paddle1Y && ballY < paddle1Y+paddleHeight){
 					ballSpeedX = -ballSpeedX;
+
+				//zmiana kąta odbicia w zależności, gdzie uderzy piłka
+					var deltaY = ballY - (paddle1Y + paddleHeight/2);
+					ballSpeedY = deltaY * 0.3;
+
 				} else {
+					player2Score++;		//musi być przed resetem, żeby podjąć decyzję o wygraniu
 					ballReset();
-					player2Score++;
 				}
 			}
 
 			//przekroczenie prawej granicy
-			if(ballX > canvas.width){
-				if(ballY > paddle1Y && ballY < paddle1Y+paddleHeight){
+			if(ballX > canvas.width-paddleThickness*3){
+				if(ballY > paddle2Y && ballY < paddle2Y+paddleHeight){
 					ballSpeedX = -ballSpeedX;
+				//zmiana kąta odbicia w zależności, gdzie uderzy piłka
+					var deltaY = ballY - (paddle2Y + paddleHeight/2);
+					ballSpeedY = deltaY * 0.3;
 				} else {
-					ballReset();
 					player1Score++;
+					ballReset();					
 				}
 			}
+
+			
+			//przekroczenie górnej i dolnej granicy
 			ballY = ballY + ballSpeedY;
-			if(ballY > canvas.height || ballY < 0){
+			if(ballY >= canvas.height || ballY <= 0){
 				ballSpeedY = -ballSpeedY;
 			}
 		}		
@@ -99,19 +138,44 @@
 			//rysowanie tła
 			drawRect(0, 0, canvas.width, canvas.height, "black"); //0,0 współrzędne lewego górnego wierzchołka
 
+			//kliknij by kontynuować po wygranej
+			if(showingWinScreen) {
+				canvasContext.font = "30px Georgia";
+				canvasContext.fillStyle = "white";
+				
+				if(player1Score >= winningScore){
+					canvasContext.fillText("You won!", 360, 100);
+				} else if (player2Score >= winningScore) {
+					canvasContext.fillText("You lost!", 360, 100);
+				}
+
+				canvasContext.fillText("Click to continue", 300, 200);
+				return;
+			}
+
 			//rysowanie linii na środku
-			drawRect(canvas.width/2-2.5, 0, 5, canvas.height, "white");
+			//drawRect(canvas.width/2-2.5, 0, 5, canvas.height, "white");
+			drawNet();
 			
 			//przywołanie funkcji rysującej piłkę
-			drawCircle(ballX, ballY, 10, "red");			
+			drawCircle(ballX, ballY, 10, "white");			
 
-			drawRect(0, paddle1Y, paddleThickness, paddleHeight, "purple"); //lewy prostokąt
-			drawRect(canvas.width-paddleThickness, paddle2Y, paddleThickness, paddleHeight, "purple"); //prawy prostokąt
+			//lewy prostokąt
+			drawRect(paddleThickness*2, paddle1Y, paddleThickness, paddleHeight, "purple"); 
+			drawCircle(paddleThickness*2.5, paddle1Y, paddleThickness/2, "purple"); 
+			drawCircle(paddleThickness*2.5, paddle1Y + paddleHeight, paddleThickness/2, "purple");
+			
+			//prawy prostokąt
+			drawRect(canvas.width-paddleThickness*3, paddle2Y, paddleThickness, paddleHeight, "purple"); 
+			drawCircle(canvas.width-paddleThickness*2.5, paddle2Y, paddleThickness/2, "purple"); 
+			drawCircle(canvas.width-paddleThickness*2.5, paddle2Y + paddleHeight, paddleThickness/2, "purple")
 
 			//tablica wyników
-			canvasContext.fillText(player1Score, 100, 100);
-			canvasContext.fillText(player2Score, canvas.width-100, 100);
-		}
+			canvasContext.font = "30px Georgia";
+			canvasContext.fillStyle = "white";
+			canvasContext.fillText(player1Score, canvas.width/2-70, 50);
+			canvasContext.fillText(player2Score, canvas.width/2+50, 50);
+			}
 
 		//główna funkcja, zbiorcza
 		window.onload = function() {
@@ -119,12 +183,14 @@
 			canvas = document.getElementById("gameCanvas");
 			canvasContext = canvas.getContext("2d");
 			
-			var framesPerSecond = 30; 
+			var framesPerSecond = 10; 
 			setInterval(function(){
 				moveEverything(); 
 				drawEverything();
 			}, 1000/framesPerSecond);
 			
+			canvas.addEventListener("mousedown", handleMouseClick);
+
 			canvas.addEventListener("mousemove",
 				function(evt){
 					var mousePos = calculateMousePos(evt);
