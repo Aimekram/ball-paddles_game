@@ -1,11 +1,45 @@
+<!DOCTYPE html>
 <html>
 <head>
+	<meta charset="utf-8">
+
 	<title>Game</title>
+
+<!-- CSS -->
+	<style type="text/css">
+		body {
+			background-color: #000;
+			overflow: hidden; /*  Disable scrollbars */
+			display: block;	/* No floating content on sides, makes the canvas act like a <div> as opposed to a <span> */
+		}
+
+		#gameCanvas {
+			position: absolute;
+			margin-left: 15%;
+/*			min-width: 400px;*/
+		}
+
+		h1 {
+			font-family: Georgia;
+			font-size: 6rem;
+			color: #FaFaFa;
+			text-align: center;
+		}
+
+	</style>
+
+<!-- JavaScript -->
 	<script>
-		var canvas;	//tło
-		var canvasContext; //grafika
-		
+		//the background - a place for drawings
+		var canvas;	
+		var canvasContext;
+
+		//window size
+		// var w = window.innerWidth;
+		// var h = window.innerHeight;
+				
 		//położenie i jego zmiany dla piłki
+		ballRadius = 20;
 		var ballX = 50; //piłka w osi X
 		var ballY = 50;
 		var ballSpeedX = 10; //o ile pikseli ma przeskakiwać
@@ -17,14 +51,23 @@
 		const paddleHeight = 100;
 		const paddleThickness = 10;
 
-		//wyniki
+		//variables for timer function
+		// var n = 5;
+		// var x = 100;
+		// var y = 100;
+
+		//scores
 		var player1Score = 0;
 		var player2Score = 0;
-		const winningScore = 3; //stała wygrana
-		var showingWinScreen = false;
+		const winningScore = 3; //constant winning condition
+ 		var showingWinScreen = false;
+
+ 		var showingStartScreen = true;
+
+ 		var timerOn = true;
 
 		function drawCircle(centerX, centerY, radius, circleColor){
-			//rysowanie piłki
+			//drawing the ball
 			canvasContext.fillStyle = circleColor;
 			canvasContext.beginPath();
 			canvasContext.arc(centerX, centerY, radius, 0, Math.PI*2, false); //false - drawing clockwise or not
@@ -32,11 +75,11 @@
 		}
 
 		function drawRect(leftX, topY, width, height, rectColor) {
-			canvasContext.fillStyle = rectColor; //tło
-			canvasContext.fillRect(leftX, topY, width, height); //0,0 
+			canvasContext.fillStyle = rectColor;
+			canvasContext.fillRect(leftX, topY, width, height);
 		}
 
-		//funkcja wpływu ruchu myszką na położenie prostokątów
+		//left paddle movement - mouse movements
 		function calculateMousePos(evt) {	//evt - event data
 			var rect = canvas.getBoundingClientRect();
 			var root = document.documentElement;
@@ -48,7 +91,7 @@
 			};
 		}
 
-		//funkcja kliknięcia myszki po zakończonej grze
+		//mouseclick function at the end of the game
 		function handleMouseClick(evt) {
 			if(showingWinScreen) {
 				player1Score = 0;
@@ -57,9 +100,16 @@
 			}
 		}
 
-		//funkcja resetująca ustawienie piłki
+		//resizing gameCanvas function
+		function resizeCanvas() {
+			canvas.width = window.innerWidth*0.7;
+			canvas.height = window.innerHeight*0.7;
+		}
+
+
+		//function reseting the ball 
 		function ballReset() {
-			//reset punktów po wygranej
+			//reseting scores after ending the game
 			if(player1Score >= winningScore || player2Score >= winningScore) {
 				showingWinScreen = true;
 			}
@@ -69,14 +119,14 @@
 			ballY = canvas.height/2;
 		}
 
-		//rysowanie linii na środku
+		//drawing the net in the middle
 		function drawNet() {
 			for(var i = 0; i < canvas.height; i += 50){
 				drawRect(canvas.width/2-1, i, 2, 35, "white");
 			}
 		}
 
-		//ruchy prawego prostokąta - komputer
+		//right paddle movements - auto by computer
 		function computerMovement() {
 			var paddle2YCenter = paddle2Y + (paddleHeight/2);
 			if(paddle2YCenter < ballY-30) {		//30px zapasu od środka w każdą stronę
@@ -86,22 +136,38 @@
 			}
 		}
 
+		//countdown function - check how to use it
+		// function timer() {	 	
+ 	// 		setInterval(function(){
+ 	// 			canvasContext.clearRect(0, 0, 200, 200);  //clearing canvas
+	 // 			if(n > 0) {
+		// 			canvasContext.fillText(n, x, y);
+		// 			n--;
+		// 			x = x + 40;
+		// 			y = y + 20;
+		// 		} else if (n == 0){
+		// 			canvasContext.clearRect(0, 0, 200, 200);  //clearing canvas
+		// 			canvasContext.fillText("GO!", 15, 70);
+		// 		}
+ 	// 		}, 300);
+		// }
+
 		function moveEverything() {
-			//zatrzymanie gry gdy ktoś wygra
+			//pausing the game if someone wins
 			if(showingWinScreen) {
 				return;
 			}
 
-			//ruch prawego prostokąta
+			//right paddle movement
 			computerMovement();
 
-			//ruch piłki
+			//ball's movement
 			ballX = ballX + ballSpeedX;
 			
-			//przekroczenie lewej granicy
-			if(ballX <= paddleThickness*3){
-				if(ballY > paddle1Y && ballY < paddle1Y+paddleHeight){
-					ballSpeedX = -ballSpeedX;
+			//crossing left border
+			if(ballX <= paddleThickness*3 + ballRadius){
+				if(ballY > paddle1Y && ballY < paddle1Y + paddleHeight){
+					ballSpeedX = - ballSpeedX;
 
 				//zmiana kąta odbicia w zależności, gdzie uderzy piłka
 					var deltaY = ballY - (paddle1Y + paddleHeight/2);
@@ -113,10 +179,10 @@
 				}
 			}
 
-			//przekroczenie prawej granicy
-			if(ballX > canvas.width-paddleThickness*3){
+			//crossing right border
+			if(ballX > canvas.width - ballRadius - paddleThickness*3){
 				if(ballY > paddle2Y && ballY < paddle2Y+paddleHeight){
-					ballSpeedX = -ballSpeedX;
+					ballSpeedX = - ballSpeedX;
 				//zmiana kąta odbicia w zależności, gdzie uderzy piłka
 					var deltaY = ballY - (paddle2Y + paddleHeight/2);
 					ballSpeedY = deltaY * 0.3;
@@ -129,14 +195,21 @@
 			
 			//przekroczenie górnej i dolnej granicy
 			ballY = ballY + ballSpeedY;
-			if(ballY >= canvas.height || ballY <= 0){
-				ballSpeedY = -ballSpeedY;
+			if(ballY + ballRadius >= canvas.height || ballY - ballRadius <= 0){
+				ballSpeedY = - ballSpeedY;
 			}
 		}		
 
 		function drawEverything() {
 			//rysowanie tła
-			drawRect(0, 0, canvas.width, canvas.height, "black"); //0,0 współrzędne lewego górnego wierzchołka
+			//drawRect(0, 0, canvas.width, canvas.height, "black"); //0,0 współrzędne lewego górnego wierzchołka
+			canvasContext.fillStyle = "black";
+			canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+
+			//stroke
+			canvasContext.strokeStyle = "#F10000";
+			canvasContext.lineWidth = 5;
+			canvasContext.strokeRect(0, 0, canvas.width, canvas.height);
 
 			//kliknij by kontynuować po wygranej
 			if(showingWinScreen) {
@@ -144,53 +217,85 @@
 				canvasContext.fillStyle = "white";
 				
 				if(player1Score >= winningScore){
-					canvasContext.fillText("You won!", 360, 100);
+					canvasContext.fillText("VICTORY!", canvas.width*0.5, 100);
+					canvasContext.textAlign = "center";
 				} else if (player2Score >= winningScore) {
-					canvasContext.fillText("You lost!", 360, 100);
+					canvasContext.fillText("You lost!", canvas.width*0.5, 100);
+					canvasContext.textAlign = "center";
 				}
 
-				canvasContext.fillText("Click to continue", 300, 200);
+				canvasContext.fillText("Click to continue", canvas.width*0.5, 200);
+				canvasContext.textAlign = "center";
 				return;
-			}
+		}
 
 			//rysowanie linii na środku
 			//drawRect(canvas.width/2-2.5, 0, 5, canvas.height, "white");
 			drawNet();
 			
 			//przywołanie funkcji rysującej piłkę
-			drawCircle(ballX, ballY, 10, "white");			
+			drawCircle(ballX, ballY, ballRadius, "white");			
 
-			//lewy prostokąt
+			//left paddle
 			drawRect(paddleThickness*2, paddle1Y, paddleThickness, paddleHeight, "purple"); 
 			drawCircle(paddleThickness*2.5, paddle1Y, paddleThickness/2, "purple"); 
 			drawCircle(paddleThickness*2.5, paddle1Y + paddleHeight, paddleThickness/2, "purple");
 			
-			//prawy prostokąt
-			drawRect(canvas.width-paddleThickness*3, paddle2Y, paddleThickness, paddleHeight, "purple"); 
-			drawCircle(canvas.width-paddleThickness*2.5, paddle2Y, paddleThickness/2, "purple"); 
-			drawCircle(canvas.width-paddleThickness*2.5, paddle2Y + paddleHeight, paddleThickness/2, "purple")
+			//right paddle
+			drawRect(canvas.width - paddleThickness*3, paddle2Y, paddleThickness, paddleHeight, "purple"); 
+			drawCircle(canvas.width - paddleThickness*2.5, paddle2Y, paddleThickness/2, "purple"); 
+			drawCircle(canvas.width - paddleThickness*2.5, paddle2Y + paddleHeight, paddleThickness/2, "purple")
 
-			//tablica wyników
+			//scores
 			canvasContext.font = "30px Georgia";
 			canvasContext.fillStyle = "white";
-			canvasContext.fillText(player1Score, canvas.width/2-70, 50);
-			canvasContext.fillText(player2Score, canvas.width/2+50, 50);
+			canvasContext.fillText(player1Score, canvas.width/2-70, canvas.height*0.2);
+			canvasContext.fillText(player2Score, canvas.width/2+50, canvas.height*0.2);
+		}
+
+
+		//the main function
+		window.onload = function() {
+			
+			canvas = document.getElementById("gameCanvas");
+			canvasContext = canvas.getContext("2d");	
+
+
+			//drawing canvas function
+			function drawCanvas() {
+				canvas.width = window.innerWidth*0.7;
+				canvas.height = window.innerHeight*0.7;
+			}		
+			
+			//resposivity function
+			resize();
+			function resize() {
+				window.addEventListener("resize", resizeCanvas, false);
+				drawCanvas();
 			}
 
-		//główna funkcja, zbiorcza
-		window.onload = function() {
+			//mouseclick function at the begining of the game
+			function startMouseClick(evt){
+				if(showingStartScreen) {
+					var framesPerSecond = 5; 
+					setInterval(function(){
+						drawEverything();
+						moveEverything(); 
+					}, 1000/framesPerSecond);
+					showingStartScreen = false;
+				}
+			}
 
-			canvas = document.getElementById("gameCanvas");
-			canvasContext = canvas.getContext("2d");
-			
-			var framesPerSecond = 30; 
-			setInterval(function(){
-				moveEverything(); 
-				drawEverything();
-			}, 1000/framesPerSecond);
-			
+			canvasContext.font = "30px Georgia";
+			canvasContext.fillStyle = "white";	
+			canvasContext.textAlign = "center";				
+			canvasContext.fillText("Click here to start the game", canvas.width*0.5, 100);
+
+			//mouseclick
+			canvas.addEventListener("mousedown", startMouseClick);	
 			canvas.addEventListener("mousedown", handleMouseClick);
-
+					
+			//mousemovements for left paddle
 			canvas.addEventListener("mousemove",
 				function(evt){
 					var mousePos = calculateMousePos(evt);
@@ -200,8 +305,12 @@
 
 	</script>
 </head>
+
+<!-- HTML -->
 <body>
-	<canvas id="gameCanvas" width="800" height="600"></canvas>
+	<h1>PADDLES GAME</h1>
+
+	<canvas id="gameCanvas"></canvas>
 
 </body>
 </html>
