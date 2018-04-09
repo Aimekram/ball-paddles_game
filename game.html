@@ -59,7 +59,7 @@
 		//scores
 		var player1Score = 0;
 		var player2Score = 0;
-		const winningScore = 3; //constant winning condition
+		const winningScore = prompt("Set the winning score: "); //constant winning condition
  		var showingWinScreen = false;
 
  		var showingStartScreen = true;
@@ -277,7 +277,7 @@
 			//mouseclick function at the begining of the game
 			function startMouseClick(evt){
 				if(showingStartScreen) {
-					var framesPerSecond = 5; 
+					var framesPerSecond = 30; 
 					setInterval(function(){
 						drawEverything();
 						moveEverything(); 
