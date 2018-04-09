@@ -51,14 +51,23 @@
 		const paddleHeight = 100;
 		const paddleThickness = 10;
 
-		//wyniki
+		//variables for timer function
+		// var n = 5;
+		// var x = 100;
+		// var y = 100;
+
+		//scores
 		var player1Score = 0;
 		var player2Score = 0;
-		const winningScore = 5; //constant winning condition
+		const winningScore = 3; //constant winning condition
  		var showingWinScreen = false;
 
+ 		var showingStartScreen = true;
+
+ 		var timerOn = true;
+
 		function drawCircle(centerX, centerY, radius, circleColor){
-			//rysowanie piłki
+			//drawing the ball
 			canvasContext.fillStyle = circleColor;
 			canvasContext.beginPath();
 			canvasContext.arc(centerX, centerY, radius, 0, Math.PI*2, false); //false - drawing clockwise or not
@@ -70,7 +79,7 @@
 			canvasContext.fillRect(leftX, topY, width, height);
 		}
 
-		//funkcja wpływu ruchu myszką na położenie prostokątów
+		//left paddle movement - mouse movements
 		function calculateMousePos(evt) {	//evt - event data
 			var rect = canvas.getBoundingClientRect();
 			var root = document.documentElement;
@@ -82,7 +91,7 @@
 			};
 		}
 
-		//funkcja kliknięcia myszki po zakończonej grze
+		//mouseclick function at the end of the game
 		function handleMouseClick(evt) {
 			if(showingWinScreen) {
 				player1Score = 0;
@@ -95,19 +104,12 @@
 		function resizeCanvas() {
 			canvas.width = window.innerWidth*0.7;
 			canvas.height = window.innerHeight*0.7;
-			// canvas.style.marginLeft = 300;			//nie działa
-			// canvas.style.position = "absolute";;
 		}
 
 
-// //odliczanie - do napisania
-// function countdown() {
-// 	canvasContext.fillText("1");
-// }
-
-		//funkcja resetująca ustawienie piłki
+		//function reseting the ball 
 		function ballReset() {
-			//reset punktów po wygranej
+			//reseting scores after ending the game
 			if(player1Score >= winningScore || player2Score >= winningScore) {
 				showingWinScreen = true;
 			}
@@ -117,14 +119,14 @@
 			ballY = canvas.height/2;
 		}
 
-		//rysowanie linii na środku
+		//drawing the net in the middle
 		function drawNet() {
 			for(var i = 0; i < canvas.height; i += 50){
 				drawRect(canvas.width/2-1, i, 2, 35, "white");
 			}
 		}
 
-		//ruchy prawego prostokąta - komputer
+		//right paddle movements - auto by computer
 		function computerMovement() {
 			var paddle2YCenter = paddle2Y + (paddleHeight/2);
 			if(paddle2YCenter < ballY-30) {		//30px zapasu od środka w każdą stronę
@@ -134,19 +136,35 @@
 			}
 		}
 
+		//countdown function - check how to use it
+		// function timer() {	 	
+ 	// 		setInterval(function(){
+ 	// 			canvasContext.clearRect(0, 0, 200, 200);  //clearing canvas
+	 // 			if(n > 0) {
+		// 			canvasContext.fillText(n, x, y);
+		// 			n--;
+		// 			x = x + 40;
+		// 			y = y + 20;
+		// 		} else if (n == 0){
+		// 			canvasContext.clearRect(0, 0, 200, 200);  //clearing canvas
+		// 			canvasContext.fillText("GO!", 15, 70);
+		// 		}
+ 	// 		}, 300);
+		// }
+
 		function moveEverything() {
-			//zatrzymanie gry gdy ktoś wygra
+			//pausing the game if someone wins
 			if(showingWinScreen) {
 				return;
 			}
 
-			//ruch prawego prostokąta
+			//right paddle movement
 			computerMovement();
 
-			//ruch piłki
+			//ball's movement
 			ballX = ballX + ballSpeedX;
 			
-			//przekroczenie lewej granicy
+			//crossing left border
 			if(ballX <= paddleThickness*3 + ballRadius){
 				if(ballY > paddle1Y && ballY < paddle1Y + paddleHeight){
 					ballSpeedX = - ballSpeedX;
@@ -161,8 +179,8 @@
 				}
 			}
 
-			//przekroczenie prawej granicy
-			if(ballX > canvas.width - ballRadius - paddleThickness*4){
+			//crossing right border
+			if(ballX > canvas.width - ballRadius - paddleThickness*3){
 				if(ballY > paddle2Y && ballY < paddle2Y+paddleHeight){
 					ballSpeedX = - ballSpeedX;
 				//zmiana kąta odbicia w zależności, gdzie uderzy piłka
@@ -199,12 +217,15 @@
 				canvasContext.fillStyle = "white";
 				
 				if(player1Score >= winningScore){
-					canvasContext.fillText("You won!", 360, 100);
+					canvasContext.fillText("VICTORY!", canvas.width*0.5, 100);
+					canvasContext.textAlign = "center";
 				} else if (player2Score >= winningScore) {
-					canvasContext.fillText("You lost!", 360, 100);
+					canvasContext.fillText("You lost!", canvas.width*0.5, 100);
+					canvasContext.textAlign = "center";
 				}
 
-				canvasContext.fillText("Click to continue", 300, 200);
+				canvasContext.fillText("Click to continue", canvas.width*0.5, 200);
+				canvasContext.textAlign = "center";
 				return;
 		}
 
@@ -215,36 +236,35 @@
 			//przywołanie funkcji rysującej piłkę
 			drawCircle(ballX, ballY, ballRadius, "white");			
 
-			//lewy prostokąt
+			//left paddle
 			drawRect(paddleThickness*2, paddle1Y, paddleThickness, paddleHeight, "purple"); 
 			drawCircle(paddleThickness*2.5, paddle1Y, paddleThickness/2, "purple"); 
 			drawCircle(paddleThickness*2.5, paddle1Y + paddleHeight, paddleThickness/2, "purple");
 			
-			//prawy prostokąt
+			//right paddle
 			drawRect(canvas.width - paddleThickness*3, paddle2Y, paddleThickness, paddleHeight, "purple"); 
 			drawCircle(canvas.width - paddleThickness*2.5, paddle2Y, paddleThickness/2, "purple"); 
 			drawCircle(canvas.width - paddleThickness*2.5, paddle2Y + paddleHeight, paddleThickness/2, "purple")
 
-			//tablica wyników
+			//scores
 			canvasContext.font = "30px Georgia";
 			canvasContext.fillStyle = "white";
-			canvasContext.fillText(player1Score, canvas.width/2-70, 50);
-			canvasContext.fillText(player2Score, canvas.width/2+50, 50);
+			canvasContext.fillText(player1Score, canvas.width/2-70, canvas.height*0.2);
+			canvasContext.fillText(player2Score, canvas.width/2+50, canvas.height*0.2);
 		}
 
 
-		//główna funkcja, zbiorcza
+		//the main function
 		window.onload = function() {
 			
 			canvas = document.getElementById("gameCanvas");
 			canvasContext = canvas.getContext("2d");	
 
+
 			//drawing canvas function
 			function drawCanvas() {
 				canvas.width = window.innerWidth*0.7;
 				canvas.height = window.innerHeight*0.7;
-				// canvas.style.marginLeft = 300;			//nie działa
-    //      		canvas.style.position = "absolute";
 			}		
 			
 			//resposivity function
@@ -252,17 +272,29 @@
 			function resize() {
 				window.addEventListener("resize", resizeCanvas, false);
 				drawCanvas();
-			}		
+			}
 
-			var framesPerSecond = 30; 
-			setInterval(function(){
-				moveEverything(); 
-				drawEverything();
-			}, 1000/framesPerSecond);
+			//mouseclick function at the begining of the game
+			function startMouseClick(evt){
+				if(showingStartScreen) {
+					var framesPerSecond = 5; 
+					setInterval(function(){
+						drawEverything();
+						moveEverything(); 
+					}, 1000/framesPerSecond);
+					showingStartScreen = false;
+				}
+			}
+
+			canvasContext.font = "30px Georgia";
+			canvasContext.fillStyle = "white";	
+			canvasContext.textAlign = "center";				
+			canvasContext.fillText("Click here to start the game", canvas.width*0.5, 100);
 
 			//mouseclick
+			canvas.addEventListener("mousedown", startMouseClick);	
 			canvas.addEventListener("mousedown", handleMouseClick);
-
+					
 			//mousemovements for left paddle
 			canvas.addEventListener("mousemove",
 				function(evt){
