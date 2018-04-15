@@ -38,18 +38,19 @@
 		// var w = window.innerWidth;
 		// var h = window.innerHeight;
 				
-		//położenie i jego zmiany dla piłki
+		//ball position and its changes
 		ballRadius = 20;
-		var ballX = 50; //piłka w osi X
+		var ballX = 50; //ball on the 0X
 		var ballY = 50;
-		var ballSpeedX = 10; //o ile pikseli ma przeskakiwać
+		var ballSpeedX = 10; //position changes
 		var ballSpeedY = 10;
 
-		//położenie i jego zmiany dla prostokątów
-		var paddle1Y = 250;
-		var paddle2Y = 300; // będzie automatycznie
+		//paddles size, starting position and its changes
 		const paddleHeight = 100;
 		const paddleThickness = 10;
+		var paddle1Y = 250;
+		var paddle2Y = 300;
+
 
 		//variables for timer function
 		// var n = 5;
@@ -59,12 +60,14 @@
 		//scores
 		var player1Score = 0;
 		var player2Score = 0;
-		const winningScore = prompt("Set the winning score: "); //constant winning condition
+		var winningScore = 3; //winning condition
+		//var isNumber = false;
+
  		var showingWinScreen = false;
 
  		var showingStartScreen = true;
 
- 		var timerOn = true;
+ 		//var timerOn = true;
 
 		function drawCircle(centerX, centerY, radius, circleColor){
 			//drawing the ball
@@ -129,12 +132,23 @@
 		//right paddle movements - auto by computer
 		function computerMovement() {
 			var paddle2YCenter = paddle2Y + (paddleHeight/2);
-			if(paddle2YCenter < ballY-30) {		//30px zapasu od środka w każdą stronę
+			if(paddle2YCenter < ballY-30) {		//30px of reserve from the center, so it moves more smooth
 				paddle2Y += 8; // = paddle2Y + 8
 			} else if(paddle2YCenter > ballY+30) {
 				paddle2Y -= 8;
 			}
 		}
+
+		//checking if the input winning score is a number
+		function checkInput(winningScore){
+			if(winningScore <= 100 && winningScore >= 1){
+				isNumber = true;
+			} else if(isNaN(winningScore)) {
+				var winningScore = prompt("Set the winning score (it should be a number)): ");
+			} else {
+				var winningScore = prompt("Set the winning score (it should be between 1 and 100): ");
+			}
+		}		
 
 		//countdown function - check how to use it
 		// function timer() {	 	
@@ -169,12 +183,12 @@
 				if(ballY > paddle1Y && ballY < paddle1Y + paddleHeight){
 					ballSpeedX = - ballSpeedX;
 
-				//zmiana kąta odbicia w zależności, gdzie uderzy piłka
+				//angle changes based on the place where the ball hits the paddle
 					var deltaY = ballY - (paddle1Y + paddleHeight/2);
 					ballSpeedY = deltaY * 0.3;
 
 				} else {
-					player2Score++;		//musi być przed resetem, żeby podjąć decyzję o wygraniu
+					player2Score++;		//need to be before the reset function, so the winning decision can be made
 					ballReset();
 				}
 			}
@@ -183,7 +197,7 @@
 			if(ballX > canvas.width - ballRadius - paddleThickness*3){
 				if(ballY > paddle2Y && ballY < paddle2Y+paddleHeight){
 					ballSpeedX = - ballSpeedX;
-				//zmiana kąta odbicia w zależności, gdzie uderzy piłka
+				//angle changes based on the place where the ball hits the paddle
 					var deltaY = ballY - (paddle2Y + paddleHeight/2);
 					ballSpeedY = deltaY * 0.3;
 				} else {
@@ -193,7 +207,7 @@
 			}
 
 			
-			//przekroczenie górnej i dolnej granicy
+			//crossing top and bottom borders
 			ballY = ballY + ballSpeedY;
 			if(ballY + ballRadius >= canvas.height || ballY - ballRadius <= 0){
 				ballSpeedY = - ballSpeedY;
@@ -201,8 +215,7 @@
 		}		
 
 		function drawEverything() {
-			//rysowanie tła
-			//drawRect(0, 0, canvas.width, canvas.height, "black"); //0,0 współrzędne lewego górnego wierzchołka
+			//background
 			canvasContext.fillStyle = "black";
 			canvasContext.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -211,7 +224,7 @@
 			canvasContext.lineWidth = 5;
 			canvasContext.strokeRect(0, 0, canvas.width, canvas.height);
 
-			//kliknij by kontynuować po wygranej
+			//click to continue - after winning
 			if(showingWinScreen) {
 				canvasContext.font = "30px Georgia";
 				canvasContext.fillStyle = "white";
@@ -229,11 +242,10 @@
 				return;
 		}
 
-			//rysowanie linii na środku
-			//drawRect(canvas.width/2-2.5, 0, 5, canvas.height, "white");
+			//the net in the middle
 			drawNet();
 			
-			//przywołanie funkcji rysującej piłkę
+			//calling the function which draws the ball
 			drawCircle(ballX, ballY, ballRadius, "white");			
 
 			//left paddle
